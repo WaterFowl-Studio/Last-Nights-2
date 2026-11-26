@@ -43,7 +43,12 @@ button:hover{background:#812a25}
 <button id="start">ENTER THE HOUSE</button>
 <p class="small">Headphones recommended. Light steadies your mind. The dark does not.</p>
 </div></div>
-<div id="ending"><div class="card"><h1 id="endTitle"></h1><p id="endText"></p><button onclick="location.reload()">PLAY AGAIN</button></div></div>
+
+<div id="ending" style="display:none"><div class="card">
+<h1 id="endTitle"></h1><p id="endText"></p>
+<button id="playAgain" type="button">PLAY AGAIN</button>
+</div></div>
+
 <div id="hud">
   <div id="stats"><span id="time">NIGHT 2 · 12:00 AM</span><span id="state">STANDING</span><span id="held">HANDS EMPTY</span></div>
   <div id="objective">Find the fuse in the side room.</div>
@@ -166,22 +171,19 @@ function light(color,intensity,distance,position,cast=false){
 }
 
 scene.add(new THREE.HemisphereLight(0x89918a,0x130d0b,.48));
-const ambient=new THREE.AmbientLight(0x30332f,.24);scene.add(ambient);
+scene.add(new THREE.AmbientLight(0x30332f,.24));
 
-// Long main hallway and connected rooms.
 addBox(0,-.16,-3,5,.32,22,mat.floor,{collider:false});
 addBox(0,3.1,-3,5,.3,22,mat.dark,{collider:false});
 addBox(-2.65,1.5,-3,.3,3,22,mat.wall);
 addBox(2.65,1.5,-3,.3,3,22,mat.wall);
 addBox(0,1.5,8,5,3,.3,mat.wall);
 addBox(0,1.5,-14,5,3,.3,mat.wall);
-// Room partitions and gaps.
 addBox(-1.69,1.5,-5,.3,3,4,mat.wall);
 addBox(1.69,1.5,-5,.3,3,4,mat.wall);
 addBox(-1.48,1.5,-10,.3,3,4,mat.wall);
 addBox(1.48,1.5,-10,.3,3,4,mat.wall);
 
-// Scattered floorboards, stains and rubble.
 for(let i=0;i<45;i++){
   const z=7-Math.random()*20;
   addBox((Math.random()-.5)*4.5,.015,z,.035,.018,.3+Math.random()*.8,mat.wood,{collider:false,cast:false});
@@ -193,19 +195,15 @@ addBox(-1.15,.48,-3.4,1.1,.95,.8,mat.wood);
 addBox(1.05,.45,-7.15,1.25,.9,.85,mat.dark);
 addBox(-.65,.82,-11.2,1.55,.12,.8,mat.wood);
 
-// Main hall practical lamps, including flicker.
 const lamps=[
   light(0xffd3a0,22,9,[0,2.6,-2],true),
   light(0xb1c9d8,13,7,[-1.9,2.5,-7.5],true),
   light(0xffc77a,12,6,[1.8,2.4,-11.7],true)
 ];
-const lampFixtures=[];
-for(const z of [-2,-7.5,-11.7]){
-  lampFixtures.push(addBox(0,2.91,z,.38,.11,.38,mat.metal,{collider:false}));
-}
+for(const z of [-2,-7.5,-11.7])
+  addBox(0,2.91,z,.38,.11,.38,mat.metal,{collider:false});
 const redGlow=light(0xa92217,3.5,8,[-1.9,1.6,-8]);
 
-// Exit door, hinged and openable.
 const doorPivot=new THREE.Group();
 doorPivot.position.set(-.78,0,-13.72);scene.add(doorPivot);
 const doorMesh=new THREE.Mesh(new THREE.BoxGeometry(1.55,2.68,.15),mat.wood);
@@ -213,17 +211,13 @@ doorMesh.position.set(.775,1.34,0);doorMesh.castShadow=true;doorMesh.receiveShad
 doorPivot.add(doorMesh);
 const exitKnob=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),mat.metal);
 exitKnob.position.set(1.28,1.35,-.1);doorPivot.add(exitKnob);
-colliders.push({mesh:null,door:doorPivot,w:1.55,h:2.68,d:.15,active:true,doorCollider:true});
 
-// Side-room swinging door.
 const sideDoorPivot=new THREE.Group();
 sideDoorPivot.position.set(-1.52,0,-7.55);scene.add(sideDoorPivot);
 const sideDoor=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.5,.13),mat.wood);
 sideDoor.position.set(.6,1.25,0);sideDoor.castShadow=true;sideDoor.receiveShadow=true;
 sideDoorPivot.add(sideDoor);
-colliders.push({mesh:null,door:sideDoorPivot,w:1.2,h:2.5,d:.13,active:true,doorCollider:true});
 
-// Fuse and pickups.
 const fuse=addBox(1.86,.35,-9,.24,.42,.22,mat.gold,{collider:false});
 const fuseLight=light(0xe2b84e,2.5,2,[1.86,.6,-9]);
 const pickups=[];
@@ -235,51 +229,45 @@ function createPickup(name,x,y,z,color=0x59534b){
   const edge=new THREE.Mesh(new THREE.BoxGeometry(.36,.05,.36),mat.metal);
   edge.position.y=-.11;group.add(edge);
   pickups.push({name,group,held:false,velocity:new THREE.Vector3(),home:new THREE.Vector3(x,y,z)});
-  return group;
 }
 createPickup("old box",-1.75,.4,-2.1,0x514333);
 createPickup("metal can",1.65,.4,-4.2,0x65706b);
 createPickup("broken toy",-.9,.4,-8.6,0x71403b);
-let held=null;
 
-// Vent crawl route: visible floor opening and crawl tunnel.
 addBox(-1.84,.045,-10.55,.85,.08,1.3,mat.dark,{collider:false});
 addBox(-1.84,.34,-12.5,.65,.68,4.2,mat.metal,{collider:false});
 addBox(-1.84,.7,-12.5,.8,.12,4.3,mat.metal,{collider:false});
 addBox(-2.2,.34,-12.5,.12,.65,4.3,mat.metal,{collider:false});
 addBox(-1.48,.34,-12.5,.12,.65,4.3,mat.metal,{collider:false});
 const ventGlow=light(0x8398a0,.75,3,[-1.84,.5,-11.3]);
-const ventMarker=addBox(-1.84,.1,-10.6,.48,.04,.68,mat.metal,{collider:false});
+addBox(-1.84,.1,-10.6,.48,.04,.68,mat.metal,{collider:false});
 
-// Player flashlight spotlight: position AND direction are updated from camera world pose.
 const torch=new THREE.SpotLight(0xe9e9dd,76,24,Math.PI/7,.42,1.15);
 torch.castShadow=true;torch.shadow.mapSize.set(1024,1024);torch.shadow.bias=-.001;
 scene.add(torch);scene.add(torch.target);
-const fill=new THREE.PointLight(0xffd49a,1.15,2.6);
-scene.add(fill);
-const playerLight=new THREE.PointLight(0x8294a3,.22,3);
-scene.add(playerLight);
+const fill=new THREE.PointLight(0xffd49a,1.15,2.6);scene.add(fill);
+const playerLight=new THREE.PointLight(0x8294a3,.22,3);scene.add(playerLight);
 
-// Detailed 3D monster built from meshes.
 function buildMonster(){
   const root=new THREE.Group();scene.add(root);
   const skin=new THREE.MeshStandardMaterial({map:textures.flesh,color:0x9b8880,roughness:.95});
   const black=new THREE.MeshStandardMaterial({color:0x080909,roughness:1});
   const bone=new THREE.MeshStandardMaterial({color:0xbab1a0,roughness:.8});
-  function part(geo,matr,x,y,z,sx=1,sy=1,sz=1){
-    const m=new THREE.Mesh(geo,matr);m.position.set(x,y,z);m.scale.set(sx,sy,sz);
+  function part(geo,material,x,y,z,sx=1,sy=1,sz=1){
+    const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);
     m.castShadow=true;m.receiveShadow=true;root.add(m);return m;
   }
   part(new THREE.CapsuleGeometry(.29,.95,5,10),skin,0,1.05,0,.88,1.06,.72);
   part(new THREE.SphereGeometry(.32,16,12),skin,0,1.92,-.02,.86,1,.85);
   part(new THREE.SphereGeometry(.2,12,8),black,0,1.73,-.23,1,.68,.7);
-  part(new THREE.BoxGeometry(.28,.045,.08),bone,0,1.79,-.34,1,1,1);
+  part(new THREE.BoxGeometry(.28,.045,.08),bone,0,1.79,-.34);
   for(const side of [-1,1]){
-    const eye=part(new THREE.SphereGeometry(.055,10,8),new THREE.MeshBasicMaterial({color:0xff140a}),side*.13,1.98,-.3);
+    const eye=part(new THREE.SphereGeometry(.055,10,8),
+      new THREE.MeshBasicMaterial({color:0xff140a}),side*.13,1.98,-.3);
     const glow=new THREE.PointLight(0xff1208,.5,1);glow.position.copy(eye.position);root.add(glow);
     const arm=part(new THREE.CapsuleGeometry(.075,.8,4,7),skin,side*.4,1.12,-.02);
     arm.rotation.z=-side*.22;
-    const hand=part(new THREE.SphereGeometry(.11,8,6),black,side*.47,.59,-.1,1,.7,1);
+    part(new THREE.SphereGeometry(.11,8,6),black,side*.47,.59,-.1,1,.7,1);
     for(let k=0;k<3;k++){
       const claw=part(new THREE.ConeGeometry(.025,.2,6),bone,side*.47+(k-1)*.06,.46,-.12);
       claw.rotation.x=Math.PI;
@@ -287,7 +275,6 @@ function buildMonster(){
     const leg=part(new THREE.CapsuleGeometry(.095,.5,4,7),black,side*.2,.35,.02);
     leg.rotation.z=side*.08;
   }
-  // Long uneven spines along the back.
   for(let i=0;i<5;i++){
     const spike=part(new THREE.ConeGeometry(.07,.34,6),black,0,1.1+i*.22,.25);
     spike.rotation.x=-.4;
@@ -298,26 +285,26 @@ const monster=buildMonster();
 monster.position.set(0,0,-12);
 const monsterLamp=new THREE.PointLight(0x75110e,1.2,4);scene.add(monsterLamp);
 
-// Small unlit false silhouettes used for scare moments.
 const silhouettes=[];
 function createSilhouette(){
   const g=new THREE.Group();
   const black=new THREE.MeshBasicMaterial({color:0x020303});
-  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.8,3,6),black);torso.position.y=1;g.add(torso);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.23,8,6),black);head.position.y=1.65;g.add(head);
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.24,.8,3,6),black);
+  torso.position.y=1;g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.23,8,6),black);
+  head.position.y=1.65;g.add(head);
   for(const side of [-1,1]){
     const arm=new THREE.Mesh(new THREE.CylinderGeometry(.035,.07,.9,5),black);
     arm.position.set(side*.29,1,-.04);arm.rotation.z=-side*.15;g.add(arm);
   }
-  scene.add(g);g.visible=false;silhouettes.push(g);return g;
+  scene.add(g);g.visible=false;silhouettes.push(g);
 }
 for(let i=0;i<3;i++)createSilhouette();
 
-// Player and game state.
 const player={x:0,z:5,yaw:0,pitch:0};
 const keys={};
 let started=false,paused=false,ended=false,hasFuse=false,doorOpen=false;
-let sideOpen=false,torchOn=true,crawling=false;
+let sideOpen=false,torchOn=true,crawling=false,held=null;
 let battery=100,sanity=50,elapsed=0,footstep=0;
 let sprintUntil=0,sprintReady=0,scareClock=0;
 let audio=null;
@@ -355,7 +342,8 @@ function updateObjective(){
   $("#objective").textContent=hasFuse?"The front exit is down the hall. Get out.":"Find the fuse in the side room.";
 }
 function finish(win){
-  if(ended)return;ended=true;
+  if(ended)return;
+  ended=true;
   document.exitPointerLock?.();
   $("#endTitle").textContent=win?"YOU MADE IT OUT":"IT FOUND YOU";
   $("#endText").textContent=win
@@ -382,8 +370,8 @@ function nearestDoor(){
   const p=v3(player.x,0,player.z);
   const a=p.distanceTo(v3(0,0,-13.72));
   const b=p.distanceTo(v3(-1.52,0,-7.55));
-  if(a<2)return {which:"exit",d:a};
-  if(b<2)return {which:"side",d:b};
+  if(a<2)return {which:"exit"};
+  if(b<2)return {which:"side"};
   return null;
 }
 function nearestPickup(){
@@ -399,7 +387,8 @@ function interact(){
   if(!started||ended)return;
   const p=v3(player.x,1,player.z);
   if(!hasFuse&&p.distanceTo(fuse.position)<1.5){
-    hasFuse=true;scene.remove(fuse);scene.remove(fuseLight);
+    hasFuse=true;
+    scene.remove(fuse);scene.remove(fuseLight);
     updateObjective();say("Fuse acquired. Something heard that.",2200);
     sound(620,.14,"triangle",.07);return;
   }
@@ -411,8 +400,9 @@ function interact(){
       if(doorOpen)finish(true);
       return;
     }
-    sideOpen=!sideOpen;sideDoorPivot.rotation.y=sideOpen?Math.PI/2:0;
-    sound(doorOpen?120:85,.16,"triangle",.035);
+    sideOpen=!sideOpen;
+    sideDoorPivot.rotation.y=sideOpen?Math.PI/2:0;
+    sound(sideOpen?85:120,.16,"triangle",.035);
     say(sideOpen?"The door creaks open.":"Door closed.");return;
   }
   const item=nearestPickup();
@@ -437,18 +427,23 @@ function throwHeld(){
 function toggleCrawl(){
   const distance=Math.hypot(player.x+1.84,player.z+10.6);
   if(!crawling){
-    if(distance<1.2){crawling=true;say("Crawling. Stay low in the vent.");sound(80,.2,"metal",.03)}
+    if(distance<1.2){crawling=true;say("Crawling. Stay low in the vent.");sound(80,.2,"sine",.03)}
     else say("No vent access nearby.");
   }else{
-    crawling=false;say("You climb out of the vent.");sound(110,.14,"metal",.03);
+    crawling=false;say("You climb out of the vent.");sound(110,.14,"sine",.03);
   }
 }
 
-$("#start").onclick=()=>{
+$("#start").addEventListener("click",()=>{
   started=true;menu.style.display="none";hud.style.display="block";$("#cross").style.display="block";
   renderer.domElement.requestPointerLock?.();
   if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
-};
+});
+
+$("#playAgain").addEventListener("click",()=>{
+  window.location.reload();
+});
+
 document.addEventListener("pointerlockchange",()=>{
   paused=started&&!ended&&document.pointerLockElement!==renderer.domElement;
   if(paused){menu.style.display="grid";$("#start").textContent="RESUME NIGHT"}
@@ -489,14 +484,11 @@ document.addEventListener("click",()=>{
 
 function pointBlocked(x,z){
   if(x<-2.34||x>2.34||z>7.55||z<-13.15)return true;
-  // Partition wall sections; openings are in their middle spans.
   if(Math.abs(z+5)<.18&&Math.abs(x)>1.84)return true;
   if(Math.abs(z+10)<.18&&Math.abs(x)>1.62)return true;
-  // Furniture collision.
   for(const [bx,bz,w,d] of [[-1.15,-3.4,1.1,.8],[1.05,-7.15,1.25,.85],[-.65,-11.2,1.55,.8]]){
     if(Math.abs(x-bx)<w/2+.2&&Math.abs(z-bz)<d/2+.2)return true;
   }
-  // Door openings block while closed.
   if(!doorOpen&&Math.abs(z+13.72)<.2&&Math.abs(x)<.78)return true;
   if(!sideOpen&&Math.abs(x+1.52)<.17&&Math.abs(z+7.55)<.62)return true;
   return false;
@@ -511,12 +503,12 @@ function updatePickups(dt){
     item.group.rotation.x+=dt*item.velocity.z*.4;
     item.group.rotation.z-=dt*item.velocity.x*.4;
     item.velocity.x*=Math.pow(.3,dt);item.velocity.z*=Math.pow(.3,dt);
-    if(item.velocity.length()>.45&&Math.random()<.08){sound(75,.06,"square",.015)}
+    if(item.velocity.length()>.45&&Math.random()<.08)sound(75,.06,"square",.015);
   }
 }
 function chooseScare(){
   const distance=monster.position.distanceTo(v3(player.x,0,player.z));
-  let chance=.006; // per-second base roll
+  let chance=.006;
   if(sanity<50)chance+=Math.floor((50-sanity)/5)*.03;
   else chance=Math.max(.001,chance-Math.floor((sanity-50)/10)*.005);
   if(distance<9)chance+=.012;
@@ -551,21 +543,17 @@ function update(dt){
   camera.position.set(player.x,crawling?.7:1.62,player.z);
   camera.rotation.order="YXZ";camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;
   camera.updateMatrixWorld(true);
-
-  // Beam follows full camera pose, including pitch and mouse-look direction.
   const viewDir=new THREE.Vector3();
   camera.getWorldDirection(viewDir);
   torch.position.copy(camera.position);
-  torch.target.position.copy(camera.position).add(viewDir.multiplyScalar(12));
+  torch.target.position.copy(camera.position).add(viewDir.clone().multiplyScalar(12));
   torch.intensity=torchOn&&battery>0?76:0;
   fill.position.copy(camera.position).addScaledVector(viewDir,.5);
   playerLight.position.copy(camera.position);
 
   if(torchOn&&battery>0)battery=Math.max(0,battery-dt*(sprintActive?.22:.12));
   const nearLamp=lamps.some(l=>l.position.distanceTo(camera.position)<4.8&&l.intensity>2);
-  const inVent=crawling;
-  // Sanity: light recovers it; dark steadily drains it.
-  sanity=THREE.MathUtils.clamp(sanity+(nearLamp?.65:(inVent?-.26:-.42))*dt,0,100);
+  sanity=THREE.MathUtils.clamp(sanity+(nearLamp?.65:(crawling?-.26:-.42))*dt,0,100);
   $("#sanityFill").style.width=sanity+"%";
   $("#batteryFill").style.width=battery+"%";
   $("#batteryFill").style.background=battery<20?"#af4338":"#d1bd77";
@@ -579,8 +567,6 @@ function update(dt){
       sound(sprintActive?48:(crawling?35:63),.06,"sine",sprintActive?.03:.012);
     }
   }
-
-  // Short electrical flickers and periodic surges.
   const flicker=Math.random()<.012?0:(Math.random()<.035?.22:1);
   lamps[0].intensity=flicker*(20+Math.sin(elapsed*5)*1.7);
   lamps[1].intensity=(Math.random()<.025?.12:1)*(12+Math.sin(elapsed*3)*1.1);
@@ -588,7 +574,6 @@ function update(dt){
   redGlow.intensity=2+Math.random()*1.6;
   ventGlow.intensity=.35+Math.random()*.55;
 
-  // Monster pursues the player; running makes it more aggressive.
   const target=v3(player.x,0,player.z);
   const distance=monster.position.distanceTo(target);
   const enemySpeed=.2+(hasFuse?.22:0)+(sprintActive?.12:0)+Math.min(.28,elapsed*.002);
@@ -599,10 +584,8 @@ function update(dt){
   monsterLamp.position.set(monster.position.x,.7,monster.position.z);
   monsterLamp.intensity=distance<8?1.25:0;
 
-  // Nearby monster heartbeat and visual pressure.
   if(distance<7){
-    scare.style.display="block";
-    scare.style.background="#650500";
+    scare.style.display="block";scare.style.background="#650500";
     scare.style.opacity=String(Math.min(.25,(7-distance)*.035));
     if(Math.random()<dt*.5)sound(43,.12,"sine",.02);
   }else{
